@@ -1,0 +1,53 @@
+# Ruby/Bundler
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+*.gem
+Gemfile.lock
+
+# Node.js / npm
+node_modules/
+package-lock.json
+yarn.lock
+dist/
+build/
+
+# Generated files
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+.c9/
+*.sublime-project
+*.sublime-workspace
+.vim/
+*.iml
+.env
+.env.local
+
+# OS files
+Thumbs.db
+.DS_Store
+ehthumbs.db
+
+# Vue/Rollup build output
+public/components/
+*.vue.js
+
+# AI
+.claude
