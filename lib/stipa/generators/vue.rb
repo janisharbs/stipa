@@ -9,13 +9,13 @@ module Stipa
 
       def dirs
         %w[
-          src/config
-          src/controllers
-          src/models
-          src/views/layouts
-          src/views/home
-          src/components
-          public/components
+          app/config
+          app/controllers
+          app/models
+          app/views/layouts
+          app/views/home
+          app/components
+          public/vendor
         ]
       end
 
@@ -42,8 +42,12 @@ module Stipa
             cd #{name}
             bundle install
             npm install
-            npm run build       # compile Vue components
+            npm run build       # copies Vue from node_modules + compiles app bundle
             bundle exec ruby server.rb
+
+          To upgrade Vue:
+            npm install vue@3.x.x
+            npm run build
         DONE
       end
 
@@ -54,18 +58,20 @@ module Stipa
           'rollup.config.js'                       => t_rollup_config,
           'tsconfig.json'                          => t_tsconfig,
           'server.rb'                                      => t_server,
-          'src/config/routes.rb'                         => t_routes(
+          'app/config/routes.rb'                         => t_routes(
             extra_requires: ['../controllers/home_controller', '../controllers/health_controller'],
             extra_routes:   ["get '/', to: 'home#index'", "get '/api/health', to: 'health#show'"],
             method_override: true,
           ),
-          'src/controllers/application_controller.rb'   => t_application_controller,
-          'src/controllers/home_controller.rb'           => t_home_controller,
-          'src/controllers/health_controller.rb'         => t_health_controller,
-          'src/views/layouts/application.html.erb'      => t_layout,
-          'src/views/home/index.html.erb'                => t_home_index,
+          'app/controllers/application_controller.rb'   => t_application_controller,
+          'app/controllers/home_controller.rb'           => t_home_controller,
+          'app/controllers/health_controller.rb'         => t_health_controller,
+          'app/views/layouts/application.html.erb'      => t_layout,
+          'app/views/home/index.html.erb'                => t_home_index,
           'public/app.css'                               => t_app_css,
-          'src/components/RequestCard.vue'               => t_request_card_vue,
+          'app/components/RequestCard.vue'               => t_request_card_vue,
+          'app/main.ts'                                  => t_main_ts,
+          'app/shims-vue.d.ts'                           => t_shims_vue,
         }
       end
 
@@ -75,9 +81,11 @@ module Stipa
           private: true,
           type: 'module',
           scripts: {
-            build: 'rollup -c',
-            watch: 'rollup -c --watch',
-            dev: 'concurrently "bundle exec ruby server.rb" "rollup -c --watch"',
+            'copy:vue'  => 'cp node_modules/vue/dist/vue.esm-browser.prod.js public/vendor/vue.esm-browser.prod.js',
+            build:       'npm run copy:vue && rollup -c',
+            watch:       'rollup -c --watch',
+            dev:         'npm run copy:vue && concurrently "bundle exec ruby server.rb" "rollup -c --watch"',
+            typecheck:   'vue-tsc --noEmit',
           },
           devDependencies: {
             'concurrently'              => '^8.0.0',
@@ -87,6 +95,7 @@ module Stipa
             '@vue/compiler-sfc'         => '^3.4.0',
             'typescript'                => '^5.0.0',
             'vue'                       => '^3.4.0',
+            'vue-tsc'                   => '^2.0.0',
           },
         ) + "\n"
       end
@@ -95,30 +104,18 @@ module Stipa
         <<~JS
           import vue from 'rollup-plugin-vue'
           import typescript from '@rollup/plugin-typescript'
-          import { readdirSync } from 'fs'
 
-          const src = './src/components'
-          const out = './public/components'
-
-          const inputs = readdirSync(src).filter(f => f.endsWith('.vue') || f.endsWith('.ts'))
-
-          export default inputs.map(file => {
-            const name = file.replace(/\\.(vue|ts)$/, '')
-            const isTs = file.endsWith('.ts')
-            return {
-              input: `${src}/${file}`,
-              output: {
-                file: `${out}/${name}.js`,
-                format: 'iife',
-                name,
-                globals: { vue: 'Vue' },
-              },
-              external: ['vue'],
-              // rollup-plugin-vue handles <script lang="ts"> internally;
-              // @rollup/plugin-typescript is only needed for plain .ts files.
-              plugins: [vue(), ...(isTs ? [typescript({ tsconfig: './tsconfig.json' })] : [])],
-            }
-          })
+          export default {
+            input: 'app/main.ts',
+            output: {
+              file: 'public/app.js',
+              format: 'es',
+            },
+            external: ['vue'],
+            // rollup-plugin-vue handles <script lang="ts"> in .vue SFCs;
+            // @rollup/plugin-typescript compiles app/main.ts and other plain .ts files.
+            plugins: [vue(), typescript({ tsconfig: './tsconfig.json' })],
+          }
         JS
       end
 
@@ -130,20 +127,21 @@ module Stipa
             moduleResolution: 'bundler',
             strict:           true,
             skipLibCheck:     true,
+            allowJs:          true,
           },
-          include: ['src/**/*'],
+          include: ['app/**/*'],
         ) + "\n"
       end
 
       def t_server
         <<~RUBY
           require 'stipa'
-          require_relative 'src/config/routes'
+          require_relative 'app/config/routes'
 
           APP_DIR = __dir__
 
           app = Stipa::App.new(
-            views:  "\#{APP_DIR}/src/views",
+            views:  "\#{APP_DIR}/app/views",
             public: "\#{APP_DIR}/public",
           )
 
@@ -261,17 +259,16 @@ module Stipa
             <link rel="icon" href="/favicon.ico">
             <%= stylesheet_tag '/app.css' %>
 
-            <%# Vue 3 global build — sets window.Vue %>
-            <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+            <%# Pin Vue version via importmap — upgrade by changing vue in package.json and rebuilding %>
+            <script type="importmap">
+              { "imports": { "vue": "/vendor/vue.esm-browser.prod.js" } }
+            </script>
 
-            <%# Stipa Vue bootstrapper — sets window.StipaVue, auto-mounts on DOMContentLoaded %>
+            <%# Stipa Vue bootstrapper — exposes window.StipaVue %>
             <%= stipa_vue_bootstrap %>
 
-            <%# Compiled Vue components — add one block per component %>
-            <script src="/components/RequestCard.js"></script>
-            <script>
-              window.StipaVue.register('RequestCard', window.RequestCard)
-            </script>
+            <%# App bundle — registers components and mounts them %>
+            <script type="module" src="/app.js"></script>
 
             <%# Measure time from first byte to DOMContentLoaded %>
             <script>const _t0 = performance.now()</script>
@@ -395,6 +392,28 @@ module Stipa
       end
 
 
+
+      def t_shims_vue
+        <<~TS
+          declare module '*.vue' {
+            import type { DefineComponent } from 'vue'
+            const component: DefineComponent
+            export default component
+          }
+        TS
+      end
+
+      def t_main_ts
+        <<~TS
+          import RequestCard from './components/RequestCard.vue'
+
+          // window.StipaVue is set by /stipa-vue.js, loaded as a module before this script.
+          const { StipaVue } = window as any
+
+          StipaVue.register('RequestCard', RequestCard)
+          StipaVue.mount()
+        TS
+      end
 
       def t_request_card_vue
         <<~VUE

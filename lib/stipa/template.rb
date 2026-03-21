@@ -156,7 +156,7 @@ module Stipa
     #
     #   <%= stipa_vue_bootstrap %>
     def stipa_vue_bootstrap(src: '/stipa-vue.js')
-      %(<script src="#{src}"></script>)
+      %(<script type="module" src="#{src}"></script>)
     end
 
     # Include one or more JavaScript files.
