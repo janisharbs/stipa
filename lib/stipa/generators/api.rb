@@ -23,6 +23,7 @@ module Stipa
 
       def files
         {
+          '.gitignore'                             => t_gitignore,
           'Gemfile'                                => t_gemfile,
           'server.rb'                              => t_server,
           'config/routes.rb'                       => t_routes(
@@ -32,6 +33,10 @@ module Stipa
           'controllers/application_controller.rb' => t_application_controller,
           'controllers/health_controller.rb'       => t_health_controller,
         }
+      end
+
+      def t_gitignore
+        t_gitignore_common
       end
 
       def t_server

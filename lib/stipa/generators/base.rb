@@ -23,6 +23,7 @@ module Stipa
         make_dirs
         write_files
         post_generate
+        init_git
         say done_message
       end
 
@@ -41,13 +42,45 @@ module Stipa
 
       def post_generate = nil
 
+      def init_git
+        return unless git_available?
+
+        Dir.chdir(target) do
+          system('git init -q')
+          system('git add .')
+          system("git commit -q -m 'Initial commit'")
+        end
+        say '  git     initialized repository with initial commit'
+      rescue => e
+        say "  warn    git init failed: #{e.message}"
+      end
+
       def say(msg) = puts(msg)
 
       def app_title
         name.split(/[-_]/).map(&:capitalize).join(' ')
       end
 
+      def git_available?
+        system('git --version > /dev/null 2>&1')
+      end
+
       # ── Shared templates ───────────────────────────────────────────────────────
+
+      def t_gitignore_common
+        <<~GITIGNORE
+          # Ruby
+          .bundle/
+          vendor/bundle/
+          Gemfile.lock
+
+          # OS
+          .DS_Store
+          Thumbs.db
+          *.swp
+          *.swo
+        GITIGNORE
+      end
 
       def t_gemfile
         <<~RUBY

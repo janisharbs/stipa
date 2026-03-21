@@ -53,6 +53,7 @@ module Stipa
       max_body_size:       1 * 1024 * 1024,
       backpressure:        :drop,   # :drop (503) or :block (wait briefly)
       log_level:           :info,
+      reload:              ENV['STIPA_RELOAD'] == '1',
     }.freeze
 
     def initialize(app:, **overrides)
@@ -64,7 +65,8 @@ module Stipa
         queue_depth: @config[:queue_depth],
         on_error:    method(:pool_error),
       )
-      @running = false
+      @running  = false
+      @reloader = @config[:reload] ? Reloader.new(logger: @logger) : nil
     end
 
     # Start the server. Blocks until SIGTERM/SIGINT.
@@ -73,6 +75,7 @@ module Stipa
       @running = true
 
       register_signals
+      @reloader&.start
 
       @logger.info(
         req: nil, res: nil,
@@ -85,6 +88,7 @@ module Stipa
 
       accept_loop
     ensure
+      @reloader&.stop
       @server&.close rescue nil
       @logger.info(req: nil, res: nil, msg: 'Stīpa stopped')
     end

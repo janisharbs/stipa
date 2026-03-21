@@ -20,6 +20,7 @@
 require_relative 'stipa/version'
 require_relative 'stipa/logger'
 require_relative 'stipa/thread_pool'
+require_relative 'stipa/reloader'
 require_relative 'stipa/middleware'
 require_relative 'stipa/static'
 require_relative 'stipa/template'

@@ -53,6 +53,7 @@ module Stipa
 
       def files
         {
+          '.gitignore'                             => t_gitignore,
           'Gemfile'                                => t_gemfile,
           'package.json'                           => t_package_json,
           'rollup.config.js'                       => t_rollup_config,
@@ -75,6 +76,20 @@ module Stipa
         }
       end
 
+      def t_gitignore
+        t_gitignore_common + <<~GITIGNORE
+
+          # Node
+          node_modules/
+          package-lock.json
+
+          # Build output
+          public/app.js
+          public/app.js.map
+          public/vendor/
+        GITIGNORE
+      end
+
       def t_package_json
         JSON.pretty_generate(
           name: name,
@@ -84,7 +99,7 @@ module Stipa
             'copy:vue'  => 'cp node_modules/vue/dist/vue.esm-browser.prod.js public/vendor/vue.esm-browser.prod.js',
             build:       'npm run copy:vue && rollup -c',
             watch:       'rollup -c --watch',
-            dev:         'npm run copy:vue && concurrently "bundle exec ruby server.rb" "rollup -c --watch"',
+            dev:         'npm run copy:vue && concurrently "STIPA_RELOAD=1 bundle exec ruby server.rb" "rollup -c --watch"',
             typecheck:   'vue-tsc --noEmit',
           },
           devDependencies: {
