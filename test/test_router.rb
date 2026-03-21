@@ -86,6 +86,41 @@ class TestRouter < Minitest::Test
     assert_equal 404, res.status
   end
 
+  # ── Colon-segment string routes ──────────────────────────────────────────
+
+  def test_colon_segment_sets_params
+    @app.get('/users/:id') { |req, res| res.body = req.params[:id] }
+    req = make_router_req(path: '/users/42')
+    res = Stipa::Response.new
+    @dispatch.call(req, res)
+    assert_equal '42', res.body
+    assert_equal '42', req.params[:id]
+  end
+
+  def test_colon_segment_multiple_params
+    @app.patch('/admin/users/:id') { |req, res| res.body = req.params[:id] }
+    req = make_router_req(method: 'PATCH', path: '/admin/users/7')
+    res = Stipa::Response.new
+    @dispatch.call(req, res)
+    assert_equal '7', res.body
+  end
+
+  def test_colon_segment_does_not_match_extra_segments
+    @app.delete('/admin/users/:id') { |_req, res| res.body = 'matched' }
+    req = make_router_req(method: 'DELETE', path: '/admin/users/7/extra')
+    res = Stipa::Response.new
+    @dispatch.call(req, res)
+    assert_equal 404, res.status
+  end
+
+  def test_colon_segment_two_params
+    @app.get('/orgs/:org/repos/:repo') { |req, res| res.body = "#{req.params[:org]}/#{req.params[:repo]}" }
+    req = make_router_req(path: '/orgs/ruby/repos/stipa')
+    res = Stipa::Response.new
+    @dispatch.call(req, res)
+    assert_equal 'ruby/stipa', res.body
+  end
+
   # ── First-match semantics ─────────────────────────────────────────────────
 
   def test_first_registered_route_wins

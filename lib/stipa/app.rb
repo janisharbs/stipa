@@ -95,8 +95,14 @@ module Stipa
 
         match = case pattern
                 when String
-                  # Exact string match
-                  req.path == pattern ? true : nil
+                  if pattern.include?(':')
+                    # Colon-segment pattern: /users/:id → named-capture Regexp
+                    re = pattern.gsub(%r{:([a-zA-Z_][a-zA-Z0-9_]*)}) { "(?<#{Regexp.last_match(1)}>[^/]+)" }
+                    Regexp.new("\\A#{re}\\z").match(req.path)
+                  else
+                    # Exact string match
+                    req.path == pattern ? true : nil
+                  end
                 when Regexp
                   # Full Regexp match — named captures become req.params
                   pattern.match(req.path)

@@ -132,7 +132,10 @@ module Stipa
 
             def resolve(to)
               ctrl, action = to.split('#', 2)
-              klass = Object.const_get(ctrl.split('_').map(&:capitalize).join + 'Controller')
+              # 'admin/users' → 'Admin::UsersController'
+              # 'users'       → 'UsersController'
+              class_name = ctrl.split('/').map { |seg| seg.split('_').map(&:capitalize).join }.join('::') + 'Controller'
+              klass = Object.const_get(class_name)
               [klass, action.to_sym]
             end
 

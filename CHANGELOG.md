@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-03-20
+
+### Added
+
+- **Colon-segment route patterns** — string routes now accept `:param` placeholders
+  (e.g. `'/users/:id'`, `'/admin/users/:id'`). Segments are converted to anchored
+  named-capture Regexps at match time; captured values are available via `req.params`.
+- **Namespaced controller resolution** — `to:` values such as `'admin/users#update'`
+  are now resolved to `Admin::UsersController#update`. Slash separators become `::` and
+  each segment is camel-cased independently (snake_case preserved).
+
 ## [0.1.5] - 2026-03-20
 
 ### Added
