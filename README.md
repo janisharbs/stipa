@@ -52,7 +52,7 @@ app.start(port: 3710)
 
 ```bash
 ruby server.rb
-# => Stīpa listening on 0.0.0.0:3710
+# => Stīpa listening on 127.0.0.1:3710
 ```
 
 ---
@@ -95,6 +95,16 @@ npm install
 npm run build                    # compile Vue components
 bundle exec ruby server.rb
 ```
+
+Hot reload during development:
+
+```bash
+STIPA_RELOAD=1 bundle exec ruby server.rb
+```
+
+The reloader watches all `.rb` files under the project root. When a change is saved it
+restarts the process automatically. If the changed file has a syntax error the reloader
+logs the problem and keeps watching — the process will not die on a bad save.
 
 ---
 
@@ -283,20 +293,34 @@ Build: `npm run build` → outputs `public/components/Counter.js`.
 
 ```ruby
 app.start(
-  host:              '0.0.0.0',
+  host:              '127.0.0.1', # default; use '0.0.0.0' to bind all interfaces
   port:              3710,
-  pool_size:         32,       # worker threads
-  queue_depth:       64,       # max queued jobs before backpressure
-  drain_timeout:     30,       # graceful shutdown wait (seconds)
+  pool_size:         32,          # worker threads
+  queue_depth:       64,          # max queued jobs before backpressure
+  drain_timeout:     30,          # graceful shutdown wait (seconds)
   keepalive_timeout: 5,
-  max_requests:      100,      # per connection
+  max_requests:      100,         # per connection
   max_body_size:     1_048_576,
-  backpressure:      :drop,    # :drop (503) or :block
+  backpressure:      :drop,       # :drop (503) or :block
   log_level:         :info,
+  reload:            false,       # or set STIPA_RELOAD=1 in the environment
 )
 ```
 
 Handles `SIGTERM` / `SIGINT` with graceful drain.
+
+---
+
+## Security notes
+
+- **Bind address** — the default `host: '127.0.0.1'` exposes the server only on
+  localhost. Set `host: '0.0.0.0'` (or the specific interface IP) when running behind a
+  reverse proxy or in a container.
+- **CORS** — `Middleware::Cors` never reflects an arbitrary `Origin` header back to the
+  client. Wildcard config (`origins: ['*']`) sends the literal `*`; an explicit list
+  only allows origins that are in the list.
+- **Hot reload** — `STIPA_RELOAD=1` is intended for development only. Do not enable it
+  in production.
 
 ---
 

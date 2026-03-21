@@ -146,8 +146,9 @@ module Stipa
     rescue BadRequest => e
       # Protocol violation — send 400 and close the connection.
       # Closing prevents further requests on a potentially corrupt stream.
+      @logger.warn("bad request peer=#{@peer}: #{e.message}")
       res.status = 400
-      res.body   = "Bad Request: #{e.message}"
+      res.body   = 'Bad Request'
       false
     rescue => e
       req_id = req.id || '-'

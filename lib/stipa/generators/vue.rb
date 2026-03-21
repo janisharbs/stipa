@@ -169,7 +169,7 @@ module Stipa
             res.json({ status: 'ok', framework: 'Stipa', version: Stipa::VERSION, ts: Time.now.utc.iso8601 })
           end
 
-          app.start(host: '0.0.0.0', port: 3710)
+          app.start(host: '127.0.0.1', port: 3710)
         RUBY
       end
 

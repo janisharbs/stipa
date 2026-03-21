@@ -52,7 +52,7 @@ module Stipa
 
           Routes.draw(app)
 
-          app.start(host: '0.0.0.0', port: 3710)
+          app.start(host: '127.0.0.1', port: 3710)
         RUBY
       end
 

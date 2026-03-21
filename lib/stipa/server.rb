@@ -39,7 +39,7 @@ module Stipa
   #   3. server socket is closed in the ensure block of start
   class Server
     DEFAULT_CONFIG = {
-      host:                '0.0.0.0',
+      host:                '127.0.0.1',
       port:                3710,
       pool_size:           32,
       queue_depth:         64,

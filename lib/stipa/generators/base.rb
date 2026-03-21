@@ -46,9 +46,9 @@ module Stipa
         return unless git_available?
 
         Dir.chdir(target) do
-          system('git init -q')
-          system('git add .')
-          system("git commit -q -m 'Initial commit'")
+          system('git', 'init', '-q')
+          system('git', 'add', '.')
+          system('git', 'commit', '-q', '-m', 'Initial commit')
         end
         say '  git     initialized repository with initial commit'
       rescue => e
@@ -62,7 +62,7 @@ module Stipa
       end
 
       def git_available?
-        system('git --version > /dev/null 2>&1')
+        system('git', '--version', out: File::NULL, err: File::NULL)
       end
 
       # ── Shared templates ───────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ module Stipa
                 h[k] = URI.decode_www_form_component(v.to_s) if k
               end
               override = form['_method']&.upcase
-              req.instance_variable_set(:@method, override) if %w[PUT PATCH DELETE].include?(override)
+              req.method = override if %w[PUT PATCH DELETE].include?(override)
             end
             next_app.call(req, res)
           end

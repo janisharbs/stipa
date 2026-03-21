@@ -23,8 +23,8 @@ module Stipa
     MAX_BODY_SIZE   = 1 * 1024 * 1024   #  1 MB default; configurable per-server
     VALID_METHODS   = %w[GET POST PUT PATCH DELETE HEAD OPTIONS TRACE CONNECT].freeze
 
-    attr_accessor :id, :params
-    attr_reader   :method, :path, :query_string, :http_version,
+    attr_accessor :id, :params, :method
+    attr_reader   :path, :query_string, :http_version,
                   :headers, :body, :bytes_in
 
     # Factory — called by Connection after reading the header block.

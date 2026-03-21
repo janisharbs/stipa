@@ -102,16 +102,22 @@ module Stipa
       end
 
       def call(req, res)
-        origin  = req['origin'] || '*'
-        allowed = @origins.include?('*') || @origins.include?(origin)
+        origin  = req['origin']
+        wildcard = @origins.include?('*')
+        allowed  = wildcard || (origin && @origins.include?(origin))
 
         if allowed
-          res.set_header('Access-Control-Allow-Origin',  origin)
+          # Never reflect an arbitrary Origin back. When the allowlist is '*',
+          # set the header to the literal '*'. When using an explicit list, only
+          # echo origins that are actually in the list (already guaranteed by
+          # the `allowed` check above).
+          res.set_header('Access-Control-Allow-Origin',
+                         wildcard ? '*' : origin)
           res.set_header('Access-Control-Allow-Methods', @methods)
           res.set_header('Access-Control-Allow-Headers',
                          'Content-Type, Authorization, X-Request-Id')
           # Vary tells caches that the response differs by Origin
-          res.set_header('Vary', 'Origin')
+          res.set_header('Vary', 'Origin') unless wildcard
         end
 
         # OPTIONS preflight: respond immediately without hitting the router
