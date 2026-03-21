@@ -415,6 +415,10 @@ module Stipa
             const component: DefineComponent
             export default component
           }
+
+          interface Window {
+            _t0?: number
+          }
         TS
       end
 
