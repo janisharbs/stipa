@@ -48,17 +48,18 @@ module Stipa
           @logger.warn('file change detected — restarting')
           $stdout.flush
           $stderr.flush
-          exec($0, *ARGV)
+          perform_restart
         end
       end
     rescue => e
       @logger.error("reloader crashed: #{e.class}: #{e.message}")
     end
 
-    # Collect the current set of watched files: everything Ruby has loaded
-    # plus any extra paths the user specified.
+    # Watch only .rb files under the project root (Dir.pwd), plus any extra
+    # paths the user supplied. Avoids polling hundreds of gem files.
     def watched_files
-      ($LOADED_FEATURES + @extra).uniq
+      project_files = Dir.glob(File.join(Dir.pwd, '**', '*.rb'))
+      (project_files + @extra).uniq
     end
 
     def snapshot!
@@ -74,6 +75,10 @@ module Stipa
         @mtimes[path] = current
         current != previous
       end
+    end
+
+    def perform_restart
+      exec(RbConfig.ruby, $0, *ARGV)
     end
 
     def mtime(path)
