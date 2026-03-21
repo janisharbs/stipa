@@ -44,7 +44,16 @@ module Stipa
     def watch_loop
       loop do
         sleep @interval
-        if changed?
+        dirty = dirty_files
+        next if dirty.empty?
+
+        bad = dirty.select { |f| f.end_with?('.rb') && !syntax_ok?(f) }
+        if bad.any?
+          bad.each { |f| @logger.warn("syntax error in #{f} — fix and save to restart") }
+          # Advance mtime only for clean files so bad ones stay dirty until fixed
+          (dirty - bad).each { |f| @mtimes[f] = mtime(f) }
+        else
+          dirty.each { |f| @mtimes[f] = mtime(f) }
           @logger.warn('file change detected — restarting')
           $stdout.flush
           $stderr.flush
@@ -68,13 +77,21 @@ module Stipa
       end
     end
 
+    # Returns files whose mtime has changed since the last snapshot, without
+    # updating @mtimes (callers decide when to advance the snapshot).
+    def dirty_files
+      watched_files.select { |path| mtime(path) != @mtimes[path] }
+    end
+
+    # Kept for backwards compatibility with tests / external callers.
     def changed?
-      watched_files.any? do |path|
-        current = mtime(path)
-        previous = @mtimes[path]
-        @mtimes[path] = current
-        current != previous
-      end
+      dirty = dirty_files
+      dirty.each { |f| @mtimes[f] = mtime(f) }
+      dirty.any?
+    end
+
+    def syntax_ok?(path)
+      system(RbConfig.ruby, '-c', path, out: File::NULL, err: File::NULL)
     end
 
     def perform_restart

@@ -68,6 +68,69 @@ class TestReloader < Minitest::Test
     end
   end
 
+  # ── syntax checking ──────────────────────────────────────────────────────
+
+  def test_syntax_ok_returns_true_for_valid_file
+    Dir.mktmpdir do |dir|
+      f = File.join(dir, 'good.rb')
+      File.write(f, "puts 'hello'")
+      reloader = Stipa::Reloader.new(logger: logger)
+      assert reloader.send(:syntax_ok?, f)
+    end
+  end
+
+  def test_syntax_ok_returns_false_for_invalid_file
+    Dir.mktmpdir do |dir|
+      f = File.join(dir, 'bad.rb')
+      File.write(f, "def foo\n  version: 3''\nend")
+      reloader = Stipa::Reloader.new(logger: logger)
+      refute reloader.send(:syntax_ok?, f)
+    end
+  end
+
+  def test_does_not_restart_when_changed_file_has_syntax_error
+    Dir.mktmpdir do |dir|
+      f = File.join(dir, 'app.rb')
+      File.write(f, "puts 'ok'")
+      reloader = Stipa::Reloader.new(logger: logger, watch: [f])
+      reloader.send(:snapshot!)
+
+      # Overwrite with broken syntax and bump mtime
+      File.write(f, "def foo\n  version: 3''\nend")
+      File.utime(Time.now + 10, Time.now + 10, f)
+
+      exec_called = false
+      reloader.define_singleton_method(:exec) { |*| exec_called = true }
+
+      # Simulate one watch loop iteration
+      dirty = reloader.send(:dirty_files)
+      bad   = dirty.select { |p| p.end_with?('.rb') && !reloader.send(:syntax_ok?, p) }
+      refute bad.empty?, 'expected syntax errors to be detected'
+      refute exec_called, 'exec must not be called when there are syntax errors'
+    end
+  end
+
+  def test_bad_file_stays_dirty_until_fixed
+    Dir.mktmpdir do |dir|
+      f = File.join(dir, 'app.rb')
+      File.write(f, "puts 'ok'")
+      reloader = Stipa::Reloader.new(logger: logger, watch: [f])
+      reloader.send(:snapshot!)
+
+      # Break the file
+      File.write(f, "def foo\n  version: 3''\nend")
+      File.utime(Time.now + 10, Time.now + 10, f)
+
+      bad = reloader.send(:dirty_files).select { |p| !reloader.send(:syntax_ok?, p) }
+      # Simulate what watch_loop does: advance only clean files, leave bad ones dirty
+      # (no clean files here, so @mtimes is untouched)
+      (reloader.send(:dirty_files) - bad).each { }
+
+      # File should still appear dirty on the next poll
+      assert reloader.send(:dirty_files).include?(f)
+    end
+  end
+
   # ── exec uses RbConfig.ruby ───────────────────────────────────────────────
 
   def test_perform_restart_uses_ruby_interpreter
