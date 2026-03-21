@@ -9,6 +9,7 @@
 /tmp/
 *.gem
 Gemfile.lock
+.ruby-lsp
 
 # Node.js / npm
 node_modules/
