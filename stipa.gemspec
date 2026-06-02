@@ -5,9 +5,9 @@ require 'stipa/version'
 Gem::Specification.new do |spec|
   spec.name          = 'stipa'
   spec.version       = Stipa::VERSION
-  spec.authors       = ['Pedro Harbs']
-  spec.email         = ['harbspj@gmail.com']
-  spec.homepage      = 'https://github.com/pedroharbs/stipa'
+  spec.authors       = ['Jānis Harbs']
+  spec.email         = ['janisharbs@inbox.lv']
+  spec.homepage      = 'https://github.com/janisharbs/stipa'
   spec.license       = 'MIT'
 
   spec.summary       = 'Minimal, production-ready HTTP framework for Ruby'
@@ -42,11 +42,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.metadata = {
-    'bug_tracker_uri'       => 'https://github.com/pedroharbs/stipa/issues',
-    'changelog_uri'         => 'https://github.com/pedroharbs/stipa/releases',
-    'documentation_uri'     => 'https://github.com/pedroharbs/stipa',
-    'homepage_uri'          => 'https://github.com/pedroharbs/stipa',
-    'source_code_uri'       => 'https://github.com/pedroharbs/stipa',
+    'bug_tracker_uri'       => 'https://github.com/janisharbs/stipa/issues',
+    'changelog_uri'         => 'https://github.com/janisharbs/stipa/releases',
+    'documentation_uri'     => 'https://github.com/janisharbs/stipa',
+    'homepage_uri'          => 'https://github.com/janisharbs/stipa',
+    'source_code_uri'       => 'https://github.com/janisharbs/stipa',
     'rubygems_mfa_required' => 'true'
   }
 
@@ -67,7 +67,7 @@ Gem::Specification.new do |spec|
     ║    $ cd my_app && bundle install && npm install                        ║
     ║    $ bundle exec ruby server.rb                                        ║
     ║                                                                          ║
-    ║  Documentation: https://github.com/pedroharbs/stipa                   ║
+    ║  Documentation: https://github.com/janisharbs/stipa                   ║
     ║                                                                          ║
     ╚══════════════════════════════════════════════════════════════════════════╝
   MESSAGE
