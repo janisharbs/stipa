@@ -192,12 +192,6 @@ module Stipa
 
           class ApplicationModel < Sequel::Model
             include Stipa::Model
-
-            def self.dataset
-              super
-            rescue Sequel::Error => e
-              raise "Database not ready: \#{e.message}"
-            end
           end
         RUBY
       end
