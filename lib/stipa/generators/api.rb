@@ -8,7 +8,7 @@ module Stipa
       def template_name = 'api'
 
       def dirs
-        %w[config controllers]
+        %w[config controllers models db/migrate]
       end
 
       def done_message
@@ -25,13 +25,17 @@ module Stipa
         {
           '.gitignore'                             => t_gitignore,
           'Gemfile'                                => t_gemfile,
+          'Rakefile'                               => t_rakefile,
           'server.rb'                              => t_server,
+          'config/database.rb'                     => t_database_config,
           'config/routes.rb'                       => t_routes(
             extra_requires: ['../controllers/health_controller'],
             extra_routes:   ["get '/health', to: 'health#show'"],
           ),
           'controllers/application_controller.rb' => t_application_controller,
           'controllers/health_controller.rb'       => t_health_controller,
+          'models/application_model.rb'            => t_application_model,
+          'db/migrate/001_create_posts.rb'         => t_migration_create_posts,
         }
       end
 
@@ -42,7 +46,15 @@ module Stipa
       def t_server
         <<~RUBY
           require 'stipa'
+          require 'stipa/database'
+
+          require_relative 'config/database'
           require_relative 'config/routes'
+
+          Stipa::Database.connect!
+
+          # Models must be loaded after the database connection is established.
+          require_relative 'models/application_model'
 
           app = Stipa::App.new
 
@@ -51,6 +63,14 @@ module Stipa
           app.use Stipa::Middleware::Cors
 
           Routes.draw(app)
+
+          app.get '/api/health' do |_req, res|
+            res.json({ status: 'ok', framework: 'Stipa', version: Stipa::VERSION, ts: Time.now.utc.iso8601 })
+          end
+
+          at_exit do
+            Stipa::Database.disconnect!
+          end
 
           app.start(host: '127.0.0.1', port: 3710)
         RUBY

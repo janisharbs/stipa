@@ -1,5 +1,5 @@
 require 'minitest/autorun'
-require_relative '../lib/stipa/request'
+require_relative '../lib/stipa/http/request'
 
 # Minitest unit tests for Stipa::Request.
 # No server or socket needed — we use a mock socket (StringIO) for body reads.

@@ -1,9 +1,9 @@
 require 'socket'
 require_relative 'thread_pool'
-require_relative 'connection'
-require_relative 'request'
-require_relative 'response'
-require_relative 'logger'
+require_relative '../http/connection'
+require_relative '../http/request'
+require_relative '../http/response'
+require_relative '../logger'
 
 module Stipa
   # TCP accept loop and connection lifecycle manager.

@@ -1,5 +1,5 @@
 require 'minitest/autorun'
-require_relative '../lib/stipa/thread_pool'
+require_relative '../lib/stipa/server/thread_pool'
 
 class TestThreadPool < Minitest::Test
   # ── Basic job execution ───────────────────────────────────────────────────

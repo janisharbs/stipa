@@ -1,7 +1,7 @@
 require 'minitest/autorun'
 require_relative '../lib/stipa/version'
-require_relative '../lib/stipa/request'
-require_relative '../lib/stipa/response'
+require_relative '../lib/stipa/http/request'
+require_relative '../lib/stipa/http/response'
 
 def make_response_req(line = "GET / HTTP/1.1\r\nHost: localhost")
   reader, writer = IO.pipe

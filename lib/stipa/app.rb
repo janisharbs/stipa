@@ -1,9 +1,9 @@
 require_relative 'version'
 require_relative 'logger'
-require_relative 'server'
-require_relative 'middleware'
-require_relative 'request'
-require_relative 'response'
+require_relative 'server/server'
+require_relative 'middleware/stack'
+require_relative 'http/request'
+require_relative 'http/response'
 
 module Stipa
   # User-facing DSL for defining routes and middleware.

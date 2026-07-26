@@ -1,4 +1,6 @@
 require 'socket'
+require_relative 'request'
+require_relative 'response'
 
 module Stipa
   # Manages the HTTP/1.1 keep-alive request/response loop for a single socket.

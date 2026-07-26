@@ -87,6 +87,13 @@ module Stipa
           source 'https://rubygems.org'
 
           gem 'stipa'
+          gem 'sequel'
+          gem 'dotenv'
+
+          # Database adapter — uncomment the one you need:
+          # gem 'pg'          # PostgreSQL
+          # gem 'mysql2'      # MySQL / MariaDB
+          # gem 'sqlite3'     # SQLite
         RUBY
       end
 
@@ -145,6 +152,116 @@ module Stipa
                 @app.public_send(verb, pattern) { |req, res| klass.new(req, res).public_send(action) }
               end
             end
+          end
+        RUBY
+      end
+
+      def t_database_config
+        <<~RUBY
+          # frozen_string_literal: true
+
+          environment = ENV.fetch('APP_ENV', 'development')
+
+          case environment
+          when 'development', 'test'
+            require 'dotenv/load'
+          end
+
+          # Set DATABASE_URL in your .env file (development/test) or environment (production).
+          #
+          # PostgreSQL:
+          #   DATABASE_URL=postgres://user:password@localhost:5432/myapp
+          #
+          # MySQL:
+          #   DATABASE_URL=mysql2://user:password@localhost:3306/myapp
+          #
+          # SQLite:
+          #   DATABASE_URL=sqlite://db/development.db
+
+          Sequel.database_timezone = :utc
+          Sequel.application_timezone = :local
+        RUBY
+      end
+
+      def t_application_model
+        <<~RUBY
+          # frozen_string_literal: true
+
+          require 'stipa/model'
+
+          class ApplicationModel < Sequel::Model
+            include Stipa::Model
+
+            def self.dataset
+              super
+            rescue Sequel::Error => e
+              raise "Database not ready: \#{e.message}"
+            end
+          end
+        RUBY
+      end
+
+      def t_migration_create_posts
+        <<~RUBY
+          # frozen_string_literal: true
+
+          Sequel.migration do
+            change do
+              create_table :posts do
+                primary_key :id
+                String  :title,       null: false
+                String  :body,        text: true
+                String  :slug,        null: false
+                DateTime :created_at, null: false
+                DateTime :updated_at, null: false
+
+                index :slug, unique: true
+              end
+            end
+          end
+        RUBY
+      end
+
+      def t_rakefile
+        <<~RUBY
+          # frozen_string_literal: true
+
+          require 'rake'
+          require 'stipa/database'
+
+          namespace :db do
+            desc 'Run pending migrations'
+            task :migrate do
+              load_config
+              Sequel::Migrator.run(Stipa::Database.connection, 'db/migrate')
+              puts "Migrated to \#{Stipa::Database.connection[:schema_info].first[:version]}"
+            end
+
+            desc 'Rollback the last migration'
+            task :rollback do
+              load_config
+              Sequel::Migrator.run(Stipa::Database.connection, 'db/migrate', target: current_version - 1)
+              puts "Rolled back to \#{current_version}"
+            end
+
+            desc 'Show current migration version'
+            task :version do
+              load_config
+              puts "Current version: \#{current_version}"
+            end
+          end
+
+          task default: 'db:migrate'
+
+          def load_config
+            require_relative 'config/database'
+            Stipa::Database.connect!
+          end
+
+          def current_version
+            Stipa::Database.connection[:schema_info].first[:version]
+          rescue
+            0
           end
         RUBY
       end

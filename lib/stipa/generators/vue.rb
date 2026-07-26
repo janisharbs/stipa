@@ -15,6 +15,7 @@ module Stipa
           app/views/layouts
           app/views/home
           app/components
+          db/migrate
           public/vendor
         ]
       end
@@ -55,10 +56,12 @@ module Stipa
         {
           '.gitignore'                             => t_gitignore,
           'Gemfile'                                => t_gemfile,
+          'Rakefile'                               => t_rakefile,
           'package.json'                           => t_package_json,
           'rollup.config.js'                       => t_rollup_config,
           'tsconfig.json'                          => t_tsconfig,
           'server.rb'                                      => t_server,
+          'app/config/database.rb'                        => t_database_config,
           'app/config/routes.rb'                         => t_routes(
             extra_requires: ['../controllers/home_controller', '../controllers/health_controller'],
             extra_routes:   ["get '/', to: 'home#index'", "get '/api/health', to: 'health#show'"],
@@ -67,6 +70,8 @@ module Stipa
           'app/controllers/application_controller.rb'   => t_application_controller,
           'app/controllers/home_controller.rb'           => t_home_controller,
           'app/controllers/health_controller.rb'         => t_health_controller,
+          'app/models/application_model.rb'              => t_application_model,
+          'db/migrate/001_create_posts.rb'               => t_migration_create_posts,
           'app/views/layouts/application.html.erb'      => t_layout,
           'app/views/home/index.html.erb'                => t_home_index,
           'public/app.css'                               => t_app_css,
@@ -151,7 +156,15 @@ module Stipa
       def t_server
         <<~RUBY
           require 'stipa'
+          require 'stipa/database'
+
+          require_relative 'app/config/database'
           require_relative 'app/config/routes'
+
+          Stipa::Database.connect!
+
+          # Models must be loaded after the database connection is established.
+          require_relative 'app/models/application_model'
 
           APP_DIR = __dir__
 
@@ -167,6 +180,10 @@ module Stipa
 
           app.get '/api/health' do |_req, res|
             res.json({ status: 'ok', framework: 'Stipa', version: Stipa::VERSION, ts: Time.now.utc.iso8601 })
+          end
+
+          at_exit do
+            Stipa::Database.disconnect!
           end
 
           app.start(host: '127.0.0.1', port: 3710)

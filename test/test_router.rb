@@ -1,9 +1,9 @@
 require 'minitest/autorun'
 require_relative '../lib/stipa/version'
 require_relative '../lib/stipa/logger'
-require_relative '../lib/stipa/middleware'
-require_relative '../lib/stipa/request'
-require_relative '../lib/stipa/response'
+require_relative '../lib/stipa/middleware/stack'
+require_relative '../lib/stipa/http/request'
+require_relative '../lib/stipa/http/response'
 require_relative '../lib/stipa/app'
 
 def make_router_req(method: 'GET', path: '/', version: 'HTTP/1.1')

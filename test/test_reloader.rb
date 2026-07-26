@@ -1,6 +1,6 @@
 require 'minitest/autorun'
 require 'tmpdir'
-require_relative '../lib/stipa/reloader'
+require_relative '../lib/stipa/server/reloader'
 
 class TestReloader < Minitest::Test
   class NullLogger

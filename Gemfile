@@ -9,5 +9,5 @@ end
 
 group :development do
   gem 'yard', '~> 0.9'
-  gem 'rubocop', '~> 1.50'
+  gem 'ruby-lsp'
 end
