@@ -54,8 +54,7 @@ module Stipa
           Stipa::Database.connect!
 
           # Models must be loaded after the database connection is established.
-          # If tables don't exist yet, run: rake db:migrate
-          require_relative 'models/application_model' rescue warn "⚠  Run 'rake db:migrate' to set up the database."
+          require_relative 'models/application_model'
 
           app = Stipa::App.new
 

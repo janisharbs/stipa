@@ -190,9 +190,18 @@ module Stipa
 
           require 'stipa/model'
 
-          class ApplicationModel < Sequel::Model
-            include Stipa::Model
-            selfRICT_DATABASE = false
+          # Include this in any Sequel::Model subclass to get
+          # timestamps, UUID, soft delete, and serialization.
+          #
+          # Usage:
+          #   class Post < Sequel::Model
+          #     include ApplicationModel
+          #   end
+
+          module ApplicationModel
+            def self.included(base)
+              base.include Stipa::Model
+            end
           end
         RUBY
       end
