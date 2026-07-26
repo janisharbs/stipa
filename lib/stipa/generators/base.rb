@@ -87,6 +87,7 @@ module Stipa
           source 'https://rubygems.org'
 
           gem 'stipa'
+          gem 'rake'
           gem 'sequel'
           gem 'dotenv'
 
@@ -227,6 +228,8 @@ module Stipa
           # frozen_string_literal: true
 
           require 'rake'
+          require 'sequel'
+          require 'sequel/extensions/migration'
           require 'stipa/database'
 
           namespace :db do

@@ -38,6 +38,7 @@ module Stipa
       )
 
       configure_connection!
+      Sequel::Model.db = @connection
       @connection
     rescue KeyError => e
       raise "Missing database configuration: #{e.message}"
