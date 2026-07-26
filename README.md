@@ -15,6 +15,7 @@
 - **Middleware stack** compiled once at startup — zero per-request overhead
 - **ERB template engine** with layouts, partials, and Vue 3 island helpers
 - **CLI generator** — `stipa new myapp` scaffolds a full MVC app with Vue + TypeScript
+- **Database layer** — optional Sequel integration with migrations, models, and connection management
 
 ---
 
@@ -73,15 +74,21 @@ Generated structure (`--vue`):
 myapp/
 ├── server.rb                    # entry point
 ├── Gemfile
+├── Rakefile                     # db:migrate, db:rollback, db:version
 ├── package.json                 # rollup + vue + typescript
 ├── rollup.config.js
 ├── tsconfig.json
-├── src/
-│   ├── config/routes.rb
+├── app/
+│   ├── config/
+│   │   ├── database.rb          # DATABASE_URL, Sequel settings
+│   │   └── routes.rb
 │   ├── controllers/
 │   ├── models/
+│   │   └── application_model.rb # base model with Stipa::Model
 │   ├── views/
 │   └── components/              # Vue SFC source (.vue, .ts)
+├── db/
+│   └── migrate/                 # Sequel migrations
 └── public/
     ├── stipa-vue.js
     ├── app.css
@@ -321,6 +328,116 @@ Handles `SIGTERM` / `SIGINT` with graceful drain.
   only allows origins that are in the list.
 - **Hot reload** — `STIPA_RELOAD=1` is intended for development only. Do not enable it
   in production.
+
+---
+
+## Database
+
+Optional Sequel integration. Add to your Gemfile:
+
+```ruby
+gem 'sequel'
+gem 'pg'          # or mysql2, sqlite3
+```
+
+Configure via `DATABASE_URL`:
+
+```bash
+# .env (development / test)
+DATABASE_URL=postgres://user:password@localhost:5432/myapp
+```
+
+```ruby
+require 'stipa/database'
+
+Stipa::Database.connect!
+DB = Stipa::Database.connection
+
+# health check
+Stipa::Database.healthy?  # => true
+
+# transactions
+Stipa::Database.transaction { DB[:posts].insert(title: 'Hello') }
+
+# shutdown
+Stipa::Database.disconnect!
+```
+
+### Migrations
+
+```bash
+rake db:migrate    # run pending migrations
+rake db:rollback   # rollback last migration
+rake db:version    # show current version
+```
+
+Create a migration:
+
+```ruby
+# db/migrate/002_create_comments.rb
+Sequel.migration do
+  change do
+    create_table :comments do
+      primary_key :id
+      foreign_key :post_id, null: false
+      String :body, text: true
+      DateTime :created_at, null: false
+      DateTime :updated_at, null: false
+    end
+  end
+end
+```
+
+---
+
+## Models
+
+Models use `Stipa::Model` — a set of Sequel plugins for common patterns:
+
+```ruby
+require 'stipa/model'
+
+class Post < ApplicationModel
+  # Included by default:
+  #   - Timestamps    (created_at / updated_at)
+  #   - UUID          (auto-generate UUID primary key)
+  #   - SoftDelete    (deleted_at scoping)
+  #   - Serialization (to_hash, to_json, from_json)
+
+  plugin :validation_helpers
+
+  def validate
+    super
+    validates_presence [:title]
+    validates_unique   [:slug]
+  end
+end
+```
+
+### Standalone modules
+
+Use individual modules without the full `Stipa::Model` bundle:
+
+```ruby
+class User < Sequel::Model
+  include Stipa::Model::UUID
+  include Stipa::Model::Pagination
+end
+
+# Pagination
+result = User.paginate(page: 2, per_page: 10)
+result[:records]     # => [#<User>, ...]
+result[:total]       # => 150
+result[:total_pages] # => 15
+
+# Soft delete
+user.soft_delete
+user.deleted?       # => true
+User.all            # => excludes soft-deleted
+User.with_deleted   # => includes all
+User.only_deleted   # => soft-deleted only
+user.restore
+```
 
 ---
 
