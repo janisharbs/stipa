@@ -192,6 +192,7 @@ module Stipa
 
           class ApplicationModel < Sequel::Model
             include Stipa::Model
+            selfRICT_DATABASE = false
           end
         RUBY
       end
@@ -217,7 +218,7 @@ module Stipa
         RUBY
       end
 
-      def t_rakefile
+      def t_rakefile(config_path: 'config')
         <<~RUBY
           # frozen_string_literal: true
 
@@ -251,7 +252,7 @@ module Stipa
           task default: 'db:migrate'
 
           def load_config
-            require_relative 'config/database'
+            require_relative '#{config_path}/database'
             Stipa::Database.connect!
           end
 

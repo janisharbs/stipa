@@ -56,7 +56,7 @@ module Stipa
         {
           '.gitignore'                             => t_gitignore,
           'Gemfile'                                => t_gemfile,
-          'Rakefile'                               => t_rakefile,
+          'Rakefile'                               => t_rakefile(config_path: 'app/config'),
           'package.json'                           => t_package_json,
           'rollup.config.js'                       => t_rollup_config,
           'tsconfig.json'                          => t_tsconfig,
