@@ -35,6 +35,7 @@ module Stipa
           'controllers/application_controller.rb' => t_application_controller,
           'controllers/health_controller.rb'       => t_health_controller,
           'models/application_model.rb'            => t_application_model,
+          'models/post.rb'                         => t_sample_model,
           'db/migrate/001_create_posts.rb'         => t_migration_create_posts,
         }
       end

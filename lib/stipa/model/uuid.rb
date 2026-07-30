@@ -4,8 +4,11 @@ module Stipa
   module Model
     module UUID
       def self.included(base)
-        base.instance_eval do
-          before_create { self.id ||= SecureRandom.uuid }
+        base.class_eval do
+          def before_create
+            self.id ||= SecureRandom.uuid
+            super
+          end
         end
       end
 

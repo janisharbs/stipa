@@ -71,6 +71,7 @@ module Stipa
           'app/controllers/home_controller.rb' => t_home_controller,
           'app/controllers/health_controller.rb' => t_health_controller,
           'app/models/application_model.rb' => t_application_model,
+          'app/models/post.rb' => t_sample_model,
           'db/migrate/001_create_posts.rb' => t_migration_create_posts,
           'app/views/layouts/application.html.erb' => t_layout,
           'app/views/home/index.html.erb' => t_home_index,

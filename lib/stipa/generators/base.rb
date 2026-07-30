@@ -188,19 +188,45 @@ module Stipa
         <<~RUBY
           # frozen_string_literal: true
 
+          Sequel::Model.require_valid_table = false
+
           require 'stipa/model'
 
-          # Include this in any Sequel::Model subclass to get
-          # timestamps, UUID, soft delete, and serialization.
+          # Base model class providing timestamps, UUID, soft delete,
+          # serialization, dirty tracking, and validation helpers.
           #
           # Usage:
-          #   class Post < Sequel::Model
-          #     include ApplicationModel
+          #   class Car < ApplicationModel
           #   end
 
-          module ApplicationModel
-            def self.included(base)
-              base.include Stipa::Model
+          class ApplicationModel < Sequel::Model
+            include Stipa::Model
+
+            # Ensure every subclass maps to its own table (e.g. Car → cars),
+            # not to the parent's abstract +application_models+ table.
+            def self.inherited(subclass)
+              super
+              subclass.set_dataset(subclass.implicit_table_name) unless subclass.name.to_s.empty?
+            end
+          end
+
+          Sequel::Model.require_valid_table = true
+        RUBY
+      end
+
+      def t_sample_model
+        <<~RUBY
+          # frozen_string_literal: true
+
+          class Post < ApplicationModel
+            def validate
+              super
+              errors.add(:title, 'is required') if title.to_s.strip.empty?
+              errors.add(:slug, 'is required') if slug.to_s.strip.empty?
+            end
+
+            def to_param
+              slug
             end
           end
         RUBY
