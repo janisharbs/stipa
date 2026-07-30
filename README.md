@@ -430,13 +430,19 @@ result[:records]     # => [#<User>, ...]
 result[:total]       # => 150
 result[:total_pages] # => 15
 
-# Soft delete
+# Soft delete (requires a `deleted_at` column)
 user.soft_delete
 user.deleted?       # => true
-User.all            # => excludes soft-deleted
-User.with_deleted   # => includes all
-User.only_deleted   # => soft-deleted only
 user.restore
+
+# Scopes
+User.dataset.deleted       # => WHERE (deleted_at IS NOT NULL)
+User.dataset.not_deleted   # => WHERE (deleted_at IS NULL)
+
+# To exclude soft-deleted records by default, override dataset:
+#   def self.dataset
+#     super.not_deleted
+#   end
 ```
 
 ---
