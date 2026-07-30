@@ -92,20 +92,68 @@ module Stipa
 
             private
 
+            # ── Success helpers ──────────────────────────────
+
             def json(data, status: 200)
               res.status = status
               res.json(data)
             end
 
-            def not_found!(message = 'Not found')
-              res.status = 404
-              res.json(error: message)
-              throw :halt
+            def created!(data = nil)
+              res.status = 201
+              data ? res.json(data) : res.tap { _1.body = '' }
             end
 
-            def unprocessable!(errors)
-              res.status = 422
-              res.json(errors: errors)
+            def no_content!
+              res.status = 204
+              res.body = ''
+            end
+
+            # ── Redirection ──────────────────────────────────
+
+            def redirect_to(path, status: 302)
+              res.status      = status
+              res['Location'] = path
+              res.body        = ''
+            end
+
+            # ── Error helpers ────────────────────────────────
+
+            def bad_request!(message = 'Bad Request')
+              error(400, message)
+            end
+
+            def unauthorized!(message = 'Unauthorized')
+              error(401, message)
+            end
+
+            def forbidden!(message = 'Forbidden')
+              error(403, message)
+            end
+
+            def not_found!(message = 'Not Found')
+              error(404, message)
+            end
+
+            def conflict!(message = 'Conflict')
+              error(409, message)
+            end
+
+            def unprocessable_entity!(message = 'Unprocessable Entity')
+              error(422, message)
+            end
+
+            def too_many_requests!(message = 'Too Many Requests')
+              error(429, message)
+            end
+
+            def internal_server_error!(message = 'Internal Server Error')
+              error(500, message)
+            end
+
+            def error(status, message)
+              res.status = status
+              res.json(error: { message: message })
               throw :halt
             end
 

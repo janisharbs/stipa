@@ -21,7 +21,7 @@ module Stipa
       end
 
       def post_generate
-        copy_asset 'stipa-vue.js',   from: GEM_JS
+        copy_asset 'stipa-vue.js', from: GEM_JS
         copy_asset 'logo.png',     from: GEM_MEDIA
         copy_asset 'favicon.ico',  from: GEM_MEDIA
       end
@@ -54,30 +54,30 @@ module Stipa
 
       def files
         {
-          '.gitignore'                             => t_gitignore,
-          'Gemfile'                                => t_gemfile,
-          'Rakefile'                               => t_rakefile(config_path: 'app/config'),
-          'package.json'                           => t_package_json,
-          'rollup.config.js'                       => t_rollup_config,
-          'tsconfig.json'                          => t_tsconfig,
-          'server.rb'                                      => t_server,
-          'app/config/database.rb'                        => t_database_config,
-          'app/config/routes.rb'                         => t_routes(
+          '.gitignore' => t_gitignore,
+          'Gemfile' => t_gemfile,
+          'Rakefile' => t_rakefile(config_path: 'app/config'),
+          'package.json' => t_package_json,
+          'rollup.config.js' => t_rollup_config,
+          'tsconfig.json' => t_tsconfig,
+          'server.rb' => t_server,
+          'app/config/database.rb' => t_database_config,
+          'app/config/routes.rb' => t_routes(
             extra_requires: ['../controllers/home_controller', '../controllers/health_controller'],
-            extra_routes:   ["get '/', to: 'home#index'", "get '/api/health', to: 'health#show'"],
-            method_override: true,
+            extra_routes: ["get '/', to: 'home#index'", "get '/api/health', to: 'health#show'"],
+            method_override: true
           ),
-          'app/controllers/application_controller.rb'   => t_application_controller,
-          'app/controllers/home_controller.rb'           => t_home_controller,
-          'app/controllers/health_controller.rb'         => t_health_controller,
-          'app/models/application_model.rb'              => t_application_model,
-          'db/migrate/001_create_posts.rb'               => t_migration_create_posts,
-          'app/views/layouts/application.html.erb'      => t_layout,
-          'app/views/home/index.html.erb'                => t_home_index,
-          'public/app.css'                               => t_app_css,
-          'app/components/RequestCard.vue'               => t_request_card_vue,
-          'app/main.ts'                                  => t_main_ts,
-          'app/shims-vue.d.ts'                           => t_shims_vue,
+          'app/controllers/application_controller.rb' => t_application_controller,
+          'app/controllers/home_controller.rb' => t_home_controller,
+          'app/controllers/health_controller.rb' => t_health_controller,
+          'app/models/application_model.rb' => t_application_model,
+          'db/migrate/001_create_posts.rb' => t_migration_create_posts,
+          'app/views/layouts/application.html.erb' => t_layout,
+          'app/views/home/index.html.erb' => t_home_index,
+          'public/app.css' => t_app_css,
+          'app/components/RequestCard.vue' => t_request_card_vue,
+          'app/main.ts' => t_main_ts,
+          'app/shims-vue.d.ts' => t_shims_vue
         }
       end
 
@@ -101,22 +101,22 @@ module Stipa
           private: true,
           type: 'module',
           scripts: {
-            'copy:vue'  => 'cp node_modules/vue/dist/vue.esm-browser.prod.js public/vendor/vue.esm-browser.prod.js',
-            build:       'npm run copy:vue && rollup -c',
-            watch:       'rollup -c --watch',
-            dev:         'npm run copy:vue && concurrently "STIPA_RELOAD=1 bundle exec ruby server.rb" "rollup -c --watch"',
-            typecheck:   'vue-tsc --noEmit',
+            'copy:vue' => 'cp node_modules/vue/dist/vue.esm-browser.prod.js public/vendor/vue.esm-browser.prod.js',
+            build: 'npm run copy:vue && rollup -c',
+            watch: 'rollup -c --watch',
+            dev: 'npm run copy:vue && concurrently "STIPA_RELOAD=1 bundle exec ruby server.rb" "rollup -c --watch"',
+            typecheck: 'vue-tsc --noEmit'
           },
           devDependencies: {
-            'concurrently'              => '^8.0.0',
-            'rollup'                    => '^4.0.0',
-            'rollup-plugin-vue'         => '^6.0.0',
+            'concurrently' => '^8.0.0',
+            'rollup' => '^4.0.0',
+            'rollup-plugin-vue' => '^6.0.0',
             '@rollup/plugin-typescript' => '^11.0.0',
-            '@vue/compiler-sfc'         => '^3.4.0',
-            'typescript'                => '^5.0.0',
-            'vue'                       => '^3.4.0',
-            'vue-tsc'                   => '^2.0.0',
-          },
+            '@vue/compiler-sfc' => '^3.4.0',
+            'typescript' => '^5.0.0',
+            'vue' => '^3.4.0',
+            'vue-tsc' => '^2.0.0'
+          }
         ) + "\n"
       end
 
@@ -142,14 +142,14 @@ module Stipa
       def t_tsconfig
         JSON.pretty_generate(
           compilerOptions: {
-            target:           'ESNext',
-            module:           'ESNext',
+            target: 'ESNext',
+            module: 'ESNext',
             moduleResolution: 'bundler',
-            strict:           true,
-            skipLibCheck:     true,
-            allowJs:          true,
+            strict: true,
+            skipLibCheck: true,
+            allowJs: true
           },
-          include: ['app/**/*'],
+          include: ['app/**/*']
         ) + "\n"
       end
 
@@ -209,15 +209,68 @@ module Stipa
               res.render(template, locals: locals, layout: layout)
             end
 
+            # ── Success helpers ──────────────────────────────
+
+            def json(data, status: 200)
+              res.status = status
+              res.json(data)
+            end
+
+            def created!(data = nil)
+              res.status = 201
+              data ? res.json(data) : res.tap { _1.body = '' }
+            end
+
+            def no_content!
+              res.status = 204
+              res.body = ''
+            end
+
+            # ── Redirection ──────────────────────────────────
+
             def redirect_to(path, status: 302)
               res.status      = status
               res['Location'] = path
               res.body        = ''
             end
 
+            # ── Error helpers ────────────────────────────────
+
+            def bad_request!(message = 'Bad Request')
+              error(400, message)
+            end
+
+            def unauthorized!(message = 'Unauthorized')
+              error(401, message)
+            end
+
+            def forbidden!(message = 'Forbidden')
+              error(403, message)
+            end
+
             def not_found!(message = 'Not Found')
-              res.status = 404
-              res.body   = message
+              error(404, message)
+            end
+
+            def conflict!(message = 'Conflict')
+              error(409, message)
+            end
+
+            def unprocessable_entity!(message = 'Unprocessable Entity')
+              error(422, message)
+            end
+
+            def too_many_requests!(message = 'Too Many Requests')
+              error(429, message)
+            end
+
+            def internal_server_error!(message = 'Internal Server Error')
+              error(500, message)
+            end
+
+            def error(status, message)
+              res.status = status
+              res.json(error: { message: message })
               throw :halt
             end
 
@@ -237,6 +290,8 @@ module Stipa
                     k, v = pair.split('=', 2)
                     p[k.to_sym] = URI.decode_www_form_component(v.to_s)
                   end
+                elsif req['content-type']&.include?('application/json')
+                  JSON.parse(req.body).each { |k, v| p[k.to_sym] = v }
                 end
 
                 p
@@ -422,8 +477,6 @@ module Stipa
           }
         CSS
       end
-
-
 
       def t_shims_vue
         <<~TS

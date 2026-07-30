@@ -5,7 +5,7 @@ require 'pathname'
 module Stipa
   module Generators
     class Base
-      GEM_JS   = File.expand_path('../../js', __dir__)
+      GEM_JS = File.expand_path('../../js', __dir__)
       GEM_MEDIA = File.expand_path('../../../media', __dir__)
       GEM_ROOT = File.expand_path('../..', GEM_JS)
 
@@ -51,7 +51,7 @@ module Stipa
           system('git', 'commit', '-q', '-m', 'Initial commit')
         end
         say '  git     initialized repository with initial commit'
-      rescue => e
+      rescue StandardError => e
         say "  warn    git init failed: #{e.message}"
       end
 
@@ -150,7 +150,7 @@ module Stipa
             %w[get post put patch delete].each do |verb|
               define_method(verb) do |pattern, to:|
                 klass, action = resolve(to)
-                @app.public_send(verb, pattern) { |req, res| klass.new(req, res).public_send(action) }
+                @app.public_send(verb, pattern) { |req, res| catch(:halt) { klass.new(req, res).public_send(action) } }
               end
             end
           end
